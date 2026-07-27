@@ -3,14 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>K-Heritage AR</title>
+  <title>ar-k-heritage</title>
   <!-- Google model-viewer CDN -->
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
   <style>
     body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background-color: #111; }
     model-viewer { width: 100%; height: 100%; }
     
-    /* AR 버튼 스타일 */
     .ar-button { 
       position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); 
       padding: 14px 28px; background: #ffffff; color: #000000; 
@@ -21,10 +20,10 @@
 </head>
 <body>
 
-  <!-- 테스트용 3D 석상 모델 -->
+  <!-- Khronos 공식 빈티지 카메라 GLB 링크 -->
   <model-viewer
-    src="https://modelviewer.dev/shared-assets/models/glTF-Sample-Assets/Models/Danielle/glTF-Binary/Danielle.glb"
-    alt="3D Statue Asset"
+    src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/AntiqueCamera/glTF-Binary/AntiqueCamera.glb"
+    alt="Antique Camera 3D Model"
     ar
     ar-modes="webxr scene-viewer quick-look"
     camera-controls
