@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>방구석 국가유산 (테스트)</title>
+  <!-- Google model-viewer 라이브러리 로드 -->
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+  <style>
+    body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; }
+    /* 3D 뷰어 화면 꽉 차게 설정 */
+    model-viewer { width: 100%; height: 100%; background-color: #f0f0f0; }
+    /* AR 실행 버튼 디자인 */
+    .ar-button { 
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); 
+      padding: 12px 24px; background: #000; color: #fff; 
+      border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <model-viewer
+    src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
+    ios-src="https://modelviewer.dev/shared-assets/models/Astronaut.usdz"
+    alt="테스트용 3D 우주인 모델"
+    ar
+    ar-modes="webxr scene-viewer quick-look"
+    camera-controls
+    auto-rotate>
+    <button slot="ar-button" class="ar-button">내 방에 배치하기 (AR)</button>
+  </model-viewer>
+</body>
+</html>
