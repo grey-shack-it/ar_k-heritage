@@ -1,33 +1,42 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>방구석 국가유산 (테스트)</title>
-  <!-- Google model-viewer 라이브러리 로드 -->
+  <title>K-Heritage AR</title>
+  <!-- Google model-viewer CDN -->
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
   <style>
-    body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; }
-    /* 3D 뷰어 화면 꽉 차게 설정 */
-    model-viewer { width: 100%; height: 100%; background-color: #f0f0f0; }
-    /* AR 실행 버튼 디자인 */
+    body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background-color: #111; }
+    model-viewer { width: 100%; height: 100%; }
+    
+    /* AR 버튼 스타일 */
     .ar-button { 
-      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); 
-      padding: 12px 24px; background: #000; color: #fff; 
-      border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
+      position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); 
+      padding: 14px 28px; background: #ffffff; color: #000000; 
+      border: none; border-radius: 30px; font-weight: bold; font-size: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer;
     }
   </style>
 </head>
 <body>
+
+  <!-- 백제금동대향로 3D 모델 -->
   <model-viewer
-    src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
-    ios-src="https://modelviewer.dev/shared-assets/models/Astronaut.usdz"
-    alt="테스트용 3D 우주인 모델"
+    src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/AntiqueCamera/glTF-Binary/AntiqueCamera.glb"
+    alt="Gilded Bronze Incense Burner of Baekje"
     ar
     ar-modes="webxr scene-viewer quick-look"
     camera-controls
-    auto-rotate>
-    <button slot="ar-button" class="ar-button">내 방에 배치하기 (AR)</button>
+    touch-action="pan-y"
+    auto-rotate
+    shadow-intensity="1">
+    
+    <button slot="ar-button" class="ar-button">
+      📍 View in your space (AR)
+    </button>
+
   </model-viewer>
+
 </body>
 </html>
