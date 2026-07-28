@@ -3,54 +3,67 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>K-Heritage AR - 합천 영암사지</title>
-  <!-- Google model-viewer CDN -->
+  <title>ar-k-heritage | 국가유산 3D Explorer</title>
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
   <style>
+    * { box-sizing: border-box; }
     body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background-color: #111; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     
-    #header {
-      position: absolute; top: 20px; left: 20px; right: 20px; z-index: 10;
-      background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(12px);
-      padding: 18px 22px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.15);
+    /* 상단 컨트롤 및 정보 패널 */
+    #panel {
+      position: absolute; top: 16px; left: 16px; right: 16px; z-index: 10;
+      background: rgba(18, 18, 18, 0.85); backdrop-filter: blur(12px);
+      padding: 16px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.15);
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
-    #item-title { font-size: 20px; font-weight: 700; margin: 0 0 6px 0; color: #ffffff; letter-spacing: -0.5px; }
-    #item-status { font-size: 13px; color: #4cd964; margin: 0 0 10px 0; line-height: 1.4; }
     
-    .tag { display: inline-block; padding: 4px 8px; background: rgba(255,255,255,0.15); border-radius: 6px; font-size: 11px; margin-right: 4px; color: #ddd; }
-    
+    /* 유물 선택 드롭다운 */
+    .select-label { font-size: 11px; color: #aaa; margin-bottom: 4px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+    #heritage-select {
+      width: 100%; padding: 10px 12px; background: #222; color: #fff;
+      border: 1px solid #444; border-radius: 8px; font-size: 15px; font-weight: 600;
+      margin-bottom: 12px; outline: none; cursor: pointer;
+    }
+    #heritage-select:focus { border-color: #007aff; }
+
+    /* 메타데이터 태그 표시 영역 */
+    #item-details { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag { padding: 4px 8px; background: rgba(255,255,255,0.1); border-radius: 6px; font-size: 12px; color: #ddd; }
+    .tag-highlight { background: rgba(76, 217, 100, 0.2); color: #4cd964; border: 1px solid rgba(76, 217, 100, 0.3); }
+
     model-viewer { width: 100%; height: 100%; }
-    
+
+    /* AR 버튼 */
     .ar-button { 
-      position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); 
-      padding: 16px 32px; background: #ffffff; color: #000000; 
-      border: none; border-radius: 30px; font-weight: 700; font-size: 16px;
+      position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); 
+      padding: 14px 28px; background: #ffffff; color: #000000; 
+      border: none; border-radius: 30px; font-weight: 700; font-size: 15px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.4); cursor: pointer; z-index: 10;
     }
   </style>
 </head>
 <body>
 
-  <div id="header">
-    <h1 id="item-title">합천 영암사지</h1>
-    <p id="item-status">✅ <b>국가유산 3D 원형 DB 연동 완료</b></p>
-    <div>
-      <span class="tag" id="tag-type">파일: zip(obj)</span>
-      <span class="tag" id="tag-poly">폴리곤: 5,000,397</span>
-      <span class="tag" id="tag-method">광대역&포토</span>
+  <!-- 유물 선택 및 정보 제어 패널 -->
+  <div id="panel">
+    <label class="select-label" for="heritage-select">국가유산 3D 목록 선택</label>
+    <select id="heritage-select">
+      <option value="">국가유산 목록 불러오는 중...</option>
+    </select>
+
+    <div id="item-details">
+      <span class="tag">불러오는 중...</span>
     </div>
   </div>
 
-  <!-- AR 호환 및 석조 유물 스타일의 3D GLB 모델 적용 -->
+  <!-- 3D/AR 뷰어 -->
   <model-viewer
     id="heritage-viewer"
-    src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/GeoLODAsset/glTF-Binary/GeoLODAsset.glb"
-    alt="합천 영암사지 3D 유물"
+    src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/AntiqueCamera/glTF-Binary/AntiqueCamera.glb"
+    alt="국가유산 3D 자원"
     ar
     ar-modes="webxr scene-viewer quick-look"
     camera-controls
-    touch-action="pan-y"
     auto-rotate
     shadow-intensity="1">
     
@@ -60,32 +73,73 @@
   </model-viewer>
 
   <script>
-    const titleEl = document.getElementById("item-title");
-    const tagType = document.getElementById("tag-type");
-    const tagPoly = document.getElementById("tag-poly");
-    const tagMethod = document.getElementById("tag-method");
+    const selectEl = document.getElementById("heritage-select");
+    const detailsEl = document.getElementById("item-details");
+    let heritageDataList = [];
 
-    async function loadODCloudHeritageData() {
+    // 1. API 데이터 가져오기 (하드코딩 제거)
+    async function initHeritageApp() {
       try {
         const response = await fetch('/api/heritage');
-        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+        if (!response.ok) throw new Error(`HTTP 에러: ${response.status}`);
 
         const result = await response.json();
 
         if (result.data && result.data.length > 0) {
-          const item = result.data[0];
+          heritageDataList = result.data;
           
-          titleEl.innerText = item["문화재명_한글"] || "합천 영암사지";
-          tagType.innerText = `파일: ${item["파일 유형"] || 'zip(obj)'}`;
-          tagPoly.innerText = `폴리곤: ${item["폴리곤수"] ? item["폴리곤수"].toLocaleString() : '5,000,397'}`;
-          tagMethod.innerText = item["데이터 취득 방식"] || '3D Scan';
+          // 드롭다운 옵션 목록 동적 생성
+          selectEl.innerHTML = "";
+          heritageDataList.forEach((item, index) => {
+            const option = document.createElement("option");
+            option.value = index;
+            // 건물명이나 문화재명이 있는 경우 반영
+            const name = item["문화재명_한글"] || item["건물명"] || `국가유산 항목 ${index + 1}`;
+            option.textContent = name;
+            selectEl.appendChild(option);
+          });
+
+          // 첫 번째 유물 데이터 정보 즉시 반영
+          updateDisplay(0);
+        } else {
+          selectEl.innerHTML = `<option value="">불러올 수 있는 유물 데이터가 없습니다.</option>`;
+          detailsEl.innerHTML = `<span class="tag">데이터 없음</span>`;
         }
       } catch (error) {
-        console.error("API Fetch Error:", error);
+        console.error("API 로딩 에러:", error);
+        selectEl.innerHTML = `<option value="">API 통신 오류 발생</option>`;
+        detailsEl.innerHTML = `<span class="tag" style="color:#ff3b30;">${error.message}</span>`;
       }
     }
 
-    loadODCloudHeritageData();
+    // 2. 선택한 유물의 정보 동적 업데이트 (하드코딩 없는 정식 파싱)
+    function updateDisplay(index) {
+      const item = heritageDataList[index];
+      if (!item) return;
+
+      const fileType = item["파일 유형"] || "미지정";
+      const dataType = item["데이터 취득 방식"] || "정보 없음";
+      const polygon = item["폴리곤수"] ? Number(item["폴리곤수"]).toLocaleString() : "미상";
+      const size = item["서비스-데이터 용량(byte)"] ? (Number(item["서비스-데이터 용량(byte)"]) / (1024 * 1024)).toFixed(1) + "MB" : "용량 미상";
+
+      // 메타데이터 태그 동적 삽입
+      detailsEl.innerHTML = `
+        <span class="tag tag-highlight">파일: ${fileType}</span>
+        <span class="tag">취득방식: ${dataType}</span>
+        <span class="tag">폴리곤: ${polygon}</span>
+        <span class="tag">용량: ${size}</span>
+      `;
+    }
+
+    // 사용자가 셀렉트 박스 변경 시 이벤트 처리
+    selectEl.addEventListener("change", (e) => {
+      const selectedIndex = e.target.value;
+      if (selectedIndex !== "") {
+        updateDisplay(selectedIndex);
+      }
+    });
+
+    initHeritageApp();
   </script>
 </body>
 </html>
