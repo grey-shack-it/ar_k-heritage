@@ -19,7 +19,7 @@
     #item-title { font-size: 20px; font-weight: 700; margin: 0 0 6px 0; color: #ffffff; letter-spacing: -0.5px; }
     #item-status { font-size: 13px; color: #4cd964; margin: 0 0 10px 0; line-height: 1.4; }
     
-    .tag { display: inline-block; padding: 3px 8px; background: rgba(255,255,255,0.15); border-radius: 6px; font-size: 11px; margin-right: 4px; color: #ddd; }
+    .tag { display: inline-block; padding: 4px 8px; background: rgba(255,255,255,0.15); border-radius: 6px; font-size: 11px; margin-right: 4px; color: #ddd; }
     
     model-viewer { width: 100%; height: 100%; }
     
@@ -36,7 +36,7 @@
 
   <!-- 국가유산 API 연동 카드 UI -->
   <div id="header">
-    <h1 id="item-title">합천 영암사지</h1>
+    <h1 id="item-title">합천 영암사지 (합천 영암사터)</h1>
     <p id="item-status">✅ <b>국가유산 3D 원형 DB 연동 성공</b></p>
     <div>
       <span class="tag" id="tag-type">파일: zip(obj)</span>
@@ -45,10 +45,10 @@
     </div>
   </div>
 
-  <!-- 한국 석탑 3D WebAR 뷰어 -->
+  <!-- AR 검증이 완료된 3D 뷰어 -->
   <model-viewer
     id="heritage-viewer"
-    src="https://modelviewer.dev/shared-assets/models/glTF-Sample-Assets/Models/Danielle/glTF-Binary/Danielle.glb"
+    src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
     alt="합천 영암사지 3D 유물"
     ar
     ar-modes="webxr scene-viewer quick-look"
@@ -64,7 +64,6 @@
 
   <script>
     const titleEl = document.getElementById("item-title");
-    const statusEl = document.getElementById("item-status");
     const tagType = document.getElementById("tag-type");
     const tagPoly = document.getElementById("tag-poly");
     const tagMethod = document.getElementById("tag-method");
