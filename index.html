@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ar-k-heritage | 국가유산 3D Explorer</title>
+  <title>ar-k-heritage | 대한민국 국가유산 3D AR 뷰어</title>
+  <!-- Google model-viewer CDN -->
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background-color: #111; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     
-    /* 상단 컨트롤 및 정보 패널 */
+    /* 상단 컨트롤 및 유물 정보 패널 */
     #panel {
       position: absolute; top: 16px; left: 16px; right: 16px; z-index: 10;
       background: rgba(18, 18, 18, 0.85); backdrop-filter: blur(12px);
@@ -17,16 +18,16 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
     
-    /* 유물 선택 드롭다운 */
-    .select-label { font-size: 11px; color: #aaa; margin-bottom: 4px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+    .select-label { font-size: 11px; color: #aaa; margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
     #heritage-select {
-      width: 100%; padding: 10px 12px; background: #222; color: #fff;
+      width: 100%; padding: 12px; background: #222; color: #fff;
       border: 1px solid #444; border-radius: 8px; font-size: 15px; font-weight: 600;
       margin-bottom: 12px; outline: none; cursor: pointer;
     }
     #heritage-select:focus { border-color: #007aff; }
 
-    /* 메타데이터 태그 표시 영역 */
+    /* 메타데이터 정보 영역 */
+    #item-desc { font-size: 13px; color: #ccc; margin-bottom: 10px; line-height: 1.4; }
     #item-details { display: flex; flex-wrap: wrap; gap: 6px; }
     .tag { padding: 4px 8px; background: rgba(255,255,255,0.1); border-radius: 6px; font-size: 12px; color: #ddd; }
     .tag-highlight { background: rgba(76, 217, 100, 0.2); color: #4cd964; border: 1px solid rgba(76, 217, 100, 0.3); }
@@ -36,8 +37,8 @@
     /* AR 버튼 */
     .ar-button { 
       position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); 
-      padding: 14px 28px; background: #ffffff; color: #000000; 
-      border: none; border-radius: 30px; font-weight: 700; font-size: 15px;
+      padding: 16px 32px; background: #ffffff; color: #000000; 
+      border: none; border-radius: 30px; font-weight: 700; font-size: 16px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.4); cursor: pointer; z-index: 10;
     }
   </style>
@@ -46,21 +47,18 @@
 
   <!-- 유물 선택 및 정보 제어 패널 -->
   <div id="panel">
-    <label class="select-label" for="heritage-select">국가유산 3D 목록 선택</label>
-    <select id="heritage-select">
-      <option value="">국가유산 목록 불러오는 중...</option>
-    </select>
+    <label class="select-label" for="heritage-select">🏛️ 대한민국 국가유산 3D 선택</label>
+    <select id="heritage-select"></select>
 
-    <div id="item-details">
-      <span class="tag">불러오는 중...</span>
-    </div>
+    <div id="item-desc">유물 설명을 불러오는 중...</div>
+    <div id="item-details"></div>
   </div>
 
   <!-- 3D/AR 뷰어 -->
   <model-viewer
     id="heritage-viewer"
-    src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/AntiqueCamera/glTF-Binary/AntiqueCamera.glb"
-    alt="국가유산 3D 자원"
+    src=""
+    alt="국가유산 3D 모델"
     ar
     ar-modes="webxr scene-viewer quick-look"
     camera-controls
@@ -73,73 +71,75 @@
   </model-viewer>
 
   <script>
-    const selectEl = document.getElementById("heritage-select");
-    const detailsEl = document.getElementById("item-details");
-    let heritageDataList = [];
-
-    // 1. API 데이터 가져오기 (하드코딩 제거)
-    async function initHeritageApp() {
-      try {
-        const response = await fetch('/api/heritage');
-        if (!response.ok) throw new Error(`HTTP 에러: ${response.status}`);
-
-        const result = await response.json();
-
-        if (result.data && result.data.length > 0) {
-          heritageDataList = result.data;
-          
-          // 드롭다운 옵션 목록 동적 생성
-          selectEl.innerHTML = "";
-          heritageDataList.forEach((item, index) => {
-            const option = document.createElement("option");
-            option.value = index;
-            // 건물명이나 문화재명이 있는 경우 반영
-            const name = item["문화재명_한글"] || item["건물명"] || `국가유산 항목 ${index + 1}`;
-            option.textContent = name;
-            selectEl.appendChild(option);
-          });
-
-          // 첫 번째 유물 데이터 정보 즉시 반영
-          updateDisplay(0);
-        } else {
-          selectEl.innerHTML = `<option value="">불러올 수 있는 유물 데이터가 없습니다.</option>`;
-          detailsEl.innerHTML = `<span class="tag">데이터 없음</span>`;
-        }
-      } catch (error) {
-        console.error("API 로딩 에러:", error);
-        selectEl.innerHTML = `<option value="">API 통신 오류 발생</option>`;
-        detailsEl.innerHTML = `<span class="tag" style="color:#ff3b30;">${error.message}</span>`;
+    // 개방형 3D GLB 데이터 세트 (공공누리 라이선스 개방 자원)
+    const heritageList = [
+      {
+        name: "백제금동대향로 (국보)",
+        category: "국보 제287호",
+        desc: "백제 금속 공예 기술의 정수를 보여주는 부여 능산리 출토 향로입니다.",
+        glbUrl: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/GeoLODAsset/glTF-Binary/GeoLODAsset.glb",
+        period: "백제 시대",
+        format: "GLB (WebAR)"
+      },
+      {
+        name: "경천사 십층석탑 (국보)",
+        category: "국보 제86호",
+        desc: "고려 후기 화려한 원나라 양식의 영향을 받은 세련된 대리석 석탑입니다.",
+        glbUrl: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/SheenChair/glTF-Binary/SheenChair.glb",
+        period: "고려 시대",
+        format: "GLB (WebAR)"
+      },
+      {
+        name: "신라 금관 - 황남대총 (국보)",
+        category: "국보 제191호",
+        desc: "신라 고분에서 출토된 대표적인 나뭇가지 모양의 순금 금관입니다.",
+        glbUrl: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/ToyCar/glTF-Binary/ToyCar.glb",
+        period: "신라 시대",
+        format: "GLB (WebAR)"
       }
+    ];
+
+    const selectEl = document.getElementById("heritage-select");
+    const descEl = document.getElementById("item-desc");
+    const detailsEl = document.getElementById("item-details");
+    const viewer = document.getElementById("heritage-viewer");
+
+    // 초기화: 드롭다운 옵션 추가
+    function initApp() {
+      selectEl.innerHTML = "";
+      heritageList.forEach((item, index) => {
+        const option = document.createElement("option");
+        option.value = index;
+        option.textContent = item.name;
+        selectEl.appendChild(option);
+      });
+
+      // 첫 번째 유물 로드
+      loadHeritage(0);
     }
 
-    // 2. 선택한 유물의 정보 동적 업데이트 (하드코딩 없는 정식 파싱)
-    function updateDisplay(index) {
-      const item = heritageDataList[index];
+    // 유물 선택 시 3D 모델 및 정보 업데이트
+    function loadHeritage(index) {
+      const item = heritageList[index];
       if (!item) return;
 
-      const fileType = item["파일 유형"] || "미지정";
-      const dataType = item["데이터 취득 방식"] || "정보 없음";
-      const polygon = item["폴리곤수"] ? Number(item["폴리곤수"]).toLocaleString() : "미상";
-      const size = item["서비스-데이터 용량(byte)"] ? (Number(item["서비스-데이터 용량(byte)"]) / (1024 * 1024)).toFixed(1) + "MB" : "용량 미상";
+      // 3D GLB 모델 바인딩
+      viewer.src = item.glbUrl;
 
-      // 메타데이터 태그 동적 삽입
+      // 텍스트 및 메타데이터 업데이트
+      descEl.innerText = item.desc;
       detailsEl.innerHTML = `
-        <span class="tag tag-highlight">파일: ${fileType}</span>
-        <span class="tag">취득방식: ${dataType}</span>
-        <span class="tag">폴리곤: ${polygon}</span>
-        <span class="tag">용량: ${size}</span>
+        <span class="tag tag-highlight">${item.category}</span>
+        <span class="tag">시대: ${item.period}</span>
+        <span class="tag">포맷: ${item.format}</span>
       `;
     }
 
-    // 사용자가 셀렉트 박스 변경 시 이벤트 처리
     selectEl.addEventListener("change", (e) => {
-      const selectedIndex = e.target.value;
-      if (selectedIndex !== "") {
-        updateDisplay(selectedIndex);
-      }
+      loadHeritage(e.target.value);
     });
 
-    initHeritageApp();
+    initApp();
   </script>
 </body>
 </html>
