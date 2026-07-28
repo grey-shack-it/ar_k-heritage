@@ -11,21 +11,21 @@ export default async function handler(req, res) {
 
   const SERVICE_KEY = "2008def8c582bb2831be28ce30353e4bfc83e0254b42f281e0e6f20954573be9";
   
-  // 국가유산청 유물 목록 조회 API (국보/보물 유물 검색 파라미터 추가)
-  // ccbaKdcd: 종목코드 (11: 국보, 12: 보물)
-  const targetUrl = `https://www.heritage.go.kr/heri/openapi/openApiUnv.do?serviceKey=${SERVICE_KEY}&pageIndex=1&pageUnit=15&ccbaKdcd=11`;
+  // ODCloud API 엔드포인트 URL
+  const endpoint = "https://api.odcloud.kr/api/15147467/v1/uddi:e8729783-a7a5-4a61-86a1-e3856025ee38";
+  const targetUrl = `${endpoint}?page=1&perPage=10&serviceKey=${SERVICE_KEY}`;
 
   try {
     const apiRes = await fetch(targetUrl);
     
     if (!apiRes.ok) {
-      throw new Error(`National Heritage Server Error: ${apiRes.status}`);
+      throw new Error(`ODCloud API Status Error: ${apiRes.status}`);
     }
 
-    const data = await apiRes.text();
+    const jsonData = await apiRes.json();
     
-    // 클라이언트에 XML 데이터 반환
-    res.status(200).send(data);
+    // 깔끔한 JSON 형태로 클라이언트에 전달
+    res.status(200).json(jsonData);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
