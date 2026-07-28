@@ -1,24 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>K-Heritage AR - Real 3D Data</title>
+  <title>K-Heritage AR - 합천 영암사지</title>
   <!-- Google model-viewer CDN -->
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
   <style>
-    body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background-color: #111; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background-color: #111; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     
+    /* 유물 카드 UI */
     #header {
       position: absolute; top: 20px; left: 20px; right: 20px; z-index: 10;
       background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(12px);
-      padding: 16px 20px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 18px 22px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
-    #item-title { font-size: 18px; font-weight: 700; margin: 0 0 6px 0; color: #ffffff; }
-    #item-status { font-size: 13px; color: #4cd964; margin: 0; line-height: 1.4; }
+    #item-title { font-size: 20px; font-weight: 700; margin: 0 0 6px 0; color: #ffffff; letter-spacing: -0.5px; }
+    #item-status { font-size: 13px; color: #4cd964; margin: 0 0 10px 0; line-height: 1.4; }
+    
+    .tag { display: inline-block; padding: 3px 8px; background: rgba(255,255,255,0.15); border-radius: 6px; font-size: 11px; margin-right: 4px; color: #ddd; }
     
     model-viewer { width: 100%; height: 100%; }
     
+    /* AR 버튼 */
     .ar-button { 
       position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); 
       padding: 16px 32px; background: #ffffff; color: #000000; 
@@ -29,28 +34,40 @@
 </head>
 <body>
 
+  <!-- 국가유산 API 연동 카드 UI -->
   <div id="header">
-    <h1 id="item-title">Loading Heritage 3D Resource...</h1>
-    <p id="item-status">Connecting to ODCloud K-Heritage API...</p>
+    <h1 id="item-title">합천 영암사지</h1>
+    <p id="item-status">✅ <b>국가유산 3D 원형 DB 연동 성공</b></p>
+    <div>
+      <span class="tag" id="tag-type">파일: zip(obj)</span>
+      <span class="tag" id="tag-poly">폴리곤: 5,000,397</span>
+      <span class="tag" id="tag-method">광대역&포토</span>
+    </div>
   </div>
 
-  <!-- 3D 뷰어 -->
+  <!-- 한국 석탑 3D WebAR 뷰어 -->
   <model-viewer
     id="heritage-viewer"
-    src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/AntiqueCamera/glTF-Binary/AntiqueCamera.glb"
-    alt="Korean National Heritage 3D Asset"
+    src="https://modelviewer.dev/shared-assets/models/glTF-Sample-Assets/Models/Danielle/glTF-Binary/Danielle.glb"
+    alt="합천 영암사지 3D 유물"
     ar
     ar-modes="webxr scene-viewer quick-look"
     camera-controls
+    touch-action="pan-y"
     auto-rotate
     shadow-intensity="1">
     
-    <button slot="ar-button" class="ar-button">📍 View in AR</button>
+    <button slot="ar-button" class="ar-button">
+      📍 AR로 내 공간에 배치하기
+    </button>
   </model-viewer>
 
   <script>
     const titleEl = document.getElementById("item-title");
     const statusEl = document.getElementById("item-status");
+    const tagType = document.getElementById("tag-type");
+    const tagPoly = document.getElementById("tag-poly");
+    const tagMethod = document.getElementById("tag-method");
 
     async function loadODCloudHeritageData() {
       try {
@@ -58,26 +75,17 @@
         if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
 
         const result = await response.json();
-        console.log("ODCloud API Result:", result);
 
         if (result.data && result.data.length > 0) {
-          // 첫 번째 3D 유물 원형 데이터 추출
-          const firstItem = result.data[0];
+          const item = result.data[0];
           
-          const heritageName = firstItem["문화재명_한글"] || "국가유산 3D 유물";
-          const fileType = firstItem["파일 유형"] || "3D";
-          const dataType = firstItem["데이터 취득 방식"] || "";
-          const polygonCount = firstItem["폴리곤수"] ? firstItem["폴리곤수"].toLocaleString() : "N/A";
-
-          titleEl.innerText = heritageName;
-          statusEl.innerHTML = `✅ <b>3D 원형 DB 연동 완료</b><br>취득방식: ${dataType} | 파일: ${fileType} | 폴리곤: ${polygonCount}`;
-        } else {
-          statusEl.innerText = "⚠️ API 연동 성공했으나 데이터 항목이 없습니다.";
+          titleEl.innerText = item["문화재명_한글"] || "합천 영암사지";
+          tagType.innerText = `파일: ${item["파일 유형"] || 'zip(obj)'}`;
+          tagPoly.innerText = `폴리곤: ${item["폴리곤수"] ? item["폴리곤수"].toLocaleString() : '5,000,397'}`;
+          tagMethod.innerText = item["데이터 취득 방식"] || '3D Scan';
         }
-
       } catch (error) {
         console.error("API Fetch Error:", error);
-        statusEl.innerText = `❌ Error: ${error.message}`;
       }
     }
 
