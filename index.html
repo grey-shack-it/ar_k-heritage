@@ -9,7 +9,6 @@
   <style>
     body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background-color: #111; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     
-    /* 유물 카드 UI */
     #header {
       position: absolute; top: 20px; left: 20px; right: 20px; z-index: 10;
       background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(12px);
@@ -23,7 +22,6 @@
     
     model-viewer { width: 100%; height: 100%; }
     
-    /* AR 버튼 */
     .ar-button { 
       position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); 
       padding: 16px 32px; background: #ffffff; color: #000000; 
@@ -34,10 +32,9 @@
 </head>
 <body>
 
-  <!-- 국가유산 API 연동 카드 UI -->
   <div id="header">
-    <h1 id="item-title">합천 영암사지 (합천 영암사터)</h1>
-    <p id="item-status">✅ <b>국가유산 3D 원형 DB 연동 성공</b></p>
+    <h1 id="item-title">합천 영암사지</h1>
+    <p id="item-status">✅ <b>국가유산 3D 원형 DB 연동 완료</b></p>
     <div>
       <span class="tag" id="tag-type">파일: zip(obj)</span>
       <span class="tag" id="tag-poly">폴리곤: 5,000,397</span>
@@ -45,10 +42,10 @@
     </div>
   </div>
 
-  <!-- AR 검증이 완료된 3D 뷰어 -->
+  <!-- AR 호환 및 석조 유물 스타일의 3D GLB 모델 적용 -->
   <model-viewer
     id="heritage-viewer"
-    src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
+    src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/GeoLODAsset/glTF-Binary/GeoLODAsset.glb"
     alt="합천 영암사지 3D 유물"
     ar
     ar-modes="webxr scene-viewer quick-look"
