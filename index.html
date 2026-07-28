@@ -3,60 +3,107 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ar-k-heritage API Test</title>
+  <title>K-Heritage AR - Realtime API</title>
+  <!-- Google model-viewer CDN -->
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
   <style>
-    body { margin: 0; padding: 20px; background-color: #111; color: #fff; font-family: sans-serif; }
-    #info { margin-bottom: 15px; padding: 12px; background: #222; border-radius: 8px; font-size: 13px; word-break: break-all; max-height: 150px; overflow-y: auto; }
-    model-viewer { width: 100%; height: 60vh; background-color: #222; border-radius: 12px; }
+    body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background-color: #111; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    
+    /* 상단 유물 정보 헤더 */
+    #header {
+      position: absolute; top: 20px; left: 20px; right: 20px; z-index: 10;
+      background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(10px);
+      padding: 16px 20px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    #item-title { font-size: 18px; font-weight: 700; margin: 0 0 4px 0; color: #ffffff; }
+    #item-status { font-size: 13px; color: #4cd964; margin: 0; }
+    
+    model-viewer { width: 100%; height: 100%; }
+    
+    /* AR 버튼 */
     .ar-button { 
-      position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); 
-      padding: 14px 28px; background: #ffffff; color: #000000; 
-      border: none; border-radius: 30px; font-weight: bold; font-size: 16px; cursor: pointer;
+      position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); 
+      padding: 16px 32px; background: #ffffff; color: #000000; 
+      border: none; border-radius: 30px; font-weight: 700; font-size: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4); cursor: pointer; z-index: 10;
     }
   </style>
 </head>
 <body>
 
-  <h2>🏛️ K-Heritage API Connection</h2>
-  <div id="info">Vercel 우회 서버를 통해 API 데이터 호출 중...</div>
+  <!-- 유물 정보 표시 영역 -->
+  <div id="header">
+    <h1 id="item-title">Loading K-Heritage Item...</h1>
+    <p id="item-status">Connecting to National Heritage API...</p>
+  </div>
 
+  <!-- 3D 뷰어 -->
   <model-viewer
     id="heritage-viewer"
-    src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/AntiqueCamera/glTF-Binary/AntiqueCamera.glb"
-    alt="K-Heritage Item"
+    alt="Korean National Heritage 3D Asset"
     ar
     ar-modes="webxr scene-viewer quick-look"
     camera-controls
-    auto-rotate>
-    <button slot="ar-button" class="ar-button">📍 View in AR</button>
+    touch-action="pan-y"
+    auto-rotate
+    shadow-intensity="1">
+    
+    <button slot="ar-button" class="ar-button">
+      📍 View in your space (AR)
+    </button>
   </model-viewer>
 
   <script>
-    const infoDiv = document.getElementById("info");
+    const titleEl = document.getElementById("item-title");
+    const statusEl = document.getElementById("item-status");
+    const viewer = document.getElementById("heritage-viewer");
 
-    async function fetchHeritageData() {
+    async function loadHeritage3D() {
       try {
-        // 우리가 만든 Vercel 서버리스 함수(/api/heritage) 호출
+        // Vercel Serverless Function 우회 주소 호출
         const response = await fetch('/api/heritage');
+        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+
+        const xmlText = await response.text();
         
-        if (!response.ok) {
-          throw new Error(`HTTP Error: ${response.status}`);
+        // XML 데이터 해석 (XML Parser)
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+        
+        // 유물 데이터 노드 가져오기
+        const items = xmlDoc.getElementsByTagName("item");
+        
+        if (items.length > 0) {
+          const firstItem = items[0];
+          
+          // 유물 이름 추출 (ccbaMnm1 태그 또는 ccbaMnm2)
+          const nameKor = firstItem.getElementsByTagName("ccbaMnm1")[0]?.textContent || "National Heritage Asset";
+          
+          // 3D/미디어 파일 링크 추출 (vfileUrl 또는 3D 관련 URL 태그)
+          let fileUrl = firstItem.getElementsByTagName("vfileUrl")[0]?.textContent;
+
+          titleEl.innerText = nameKor;
+          statusEl.innerText = "✅ API Connected & 3D Bound";
+
+          // 가져온 3D 파일 URL이 존재하면 viewer에 자동 반영
+          if (fileUrl && fileUrl.trim() !== "") {
+            viewer.src = fileUrl.trim();
+          } else {
+            // 만약 해당 유물 항목에 3d glb 직접 링크가 없거나 비어있는 경우 예외 처리
+            console.warn("API 3D URL is empty for this item, keeping default/fallback model.");
+            statusEl.innerText = "⚠️ API Connected (No direct 3D GLB link in this item index)";
+          }
+        } else {
+          statusEl.innerText = "⚠️ API Connected but 0 items returned.";
         }
 
-        const rawText = await response.text();
-        console.log("Fetched API Data:", rawText);
-        
-        // 데이터가 수신되었음을 상단 상자에 표시
-        infoDiv.innerHTML = `✅ <b>API 데이터 성공적으로 수신 완료!</b><br><br><pre style="white-space: pre-wrap; font-size: 11px; color: #00ffcc;">${rawText.substring(0, 300)}...</pre>`;
-
       } catch (error) {
-        console.error("Fetch error:", error);
-        infoDiv.innerHTML = `❌ <b>오류 발생:</b> ${error.message}`;
+        console.error("API Binding Error:", error);
+        statusEl.innerText = `❌ Error: ${error.message}`;
       }
     }
 
-    fetchHeritageData();
+    loadHeritage3D();
   </script>
 </body>
 </html>
