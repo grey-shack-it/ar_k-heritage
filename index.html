@@ -7,8 +7,8 @@
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
   <style>
     body { margin: 0; padding: 20px; background-color: #111; color: #fff; font-family: sans-serif; }
-    #info { margin-bottom: 15px; padding: 10px; background: #222; border-radius: 8px; font-size: 14px; word-break: break-all; }
-    model-viewer { width: 100%; height: 70vh; background-color: #222; border-radius: 12px; }
+    #info { margin-bottom: 15px; padding: 12px; background: #222; border-radius: 8px; font-size: 13px; word-break: break-all; max-height: 150px; overflow-y: auto; }
+    model-viewer { width: 100%; height: 60vh; background-color: #222; border-radius: 12px; }
     .ar-button { 
       position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); 
       padding: 14px 28px; background: #ffffff; color: #000000; 
@@ -18,14 +18,13 @@
 </head>
 <body>
 
-  <h2>🏛️ ar-k-heritage API Test</h2>
-  <div id="info">API 데이터 불러오는 중...</div>
+  <h2>🏛️ K-Heritage API Connection</h2>
+  <div id="info">Vercel 우회 서버를 통해 API 데이터 호출 중...</div>
 
-  <!-- 3D 모델 뷰어 -->
   <model-viewer
     id="heritage-viewer"
     src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/AntiqueCamera/glTF-Binary/AntiqueCamera.glb"
-    alt="K-Heritage 3D Item"
+    alt="K-Heritage Item"
     ar
     ar-modes="webxr scene-viewer quick-look"
     camera-controls
@@ -34,27 +33,26 @@
   </model-viewer>
 
   <script>
-    const SERVICE_KEY = "2008def8c582bb2831be28ce30353e4bfc83e0254b42f281e0e6f20954573be9";
     const infoDiv = document.getElementById("info");
-    const viewer = document.getElementById("heritage-viewer");
 
-    // 국가유산 API 호출 테스트 함수
     async function fetchHeritageData() {
       try {
-        // 공공데이터포털 API 호출 (XML 또는 JSON 응답)
-        const response = await fetch(`https://www.heritage.go.kr/heri/openapi/openApiUnv.do?serviceKey=${SERVICE_KEY}&pageIndex=1&pageUnit=10`);
+        // 우리가 만든 Vercel 서버리스 함수(/api/heritage) 호출
+        const response = await fetch('/api/heritage');
         
         if (!response.ok) {
           throw new Error(`HTTP Error: ${response.status}`);
         }
 
-        const textData = await response.text();
-        console.log("API Response:", textData);
-        infoDiv.innerHTML = "✅ <b>API 호출 성공!</b> F12 개발자 도구 콘솔(Console)을 확인하세요.";
+        const rawText = await response.text();
+        console.log("Fetched API Data:", rawText);
+        
+        // 데이터가 수신되었음을 상단 상자에 표시
+        infoDiv.innerHTML = `✅ <b>API 데이터 성공적으로 수신 완료!</b><br><br><pre style="white-space: pre-wrap; font-size: 11px; color: #00ffcc;">${rawText.substring(0, 300)}...</pre>`;
 
       } catch (error) {
-        console.error("API Fetch Error:", error);
-        infoDiv.innerHTML = `⚠️ <b>API 호출 중 오류/CORS 발생:</b> ${error.message}<br><small>(CORS 제한 시 Vercel 서버리스 함수로 우회 처리합니다)</small>`;
+        console.error("Fetch error:", error);
+        infoDiv.innerHTML = `❌ <b>오류 발생:</b> ${error.message}`;
       }
     }
 
